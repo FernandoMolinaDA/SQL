@@ -1,0 +1,35 @@
+--Create a Clothing Store database
+
+CREATE TABLE fermos ( id INTEGER PRIMARY KEY, name TEXT, color TEXT, price INTEGER, season TEXT, inventory INTEGER );
+INSERT INTO fermos VALUES (1, "t-shirt 1", "RED", 19.99, "Summer", 150);
+INSERT INTO fermos VALUES (2, "t-shirt 2", "RED", 19.99, "Summer", 120);
+INSERT INTO fermos VALUES (3, "t-shirt 3", "BLACK", 17.99, "Summer", 110);
+INSERT INTO fermos VALUES (4, "t-shirt 4", "BLACK", 16.99, "Winter", 75);
+INSERT INTO fermos VALUES (5, "t-shirt 5", "BLACK", 19.99, "Spring", 50);
+INSERT INTO fermos VALUES (6, "Hoodie 1", "WHITE", 39.99, "Winter", 50);
+INSERT INTO fermos VALUES (7, "Hoodie 2", "BLACK", 39.99, "Winter", 50);
+INSERT INTO fermos VALUES (8, "Hoodie 3", "BLACK", 39.99, "Winter", 25);
+INSERT INTO fermos VALUES (9, "Hoodie 4", "GREY", 39.99, "Winter", 25);
+INSERT INTO fermos VALUES (10, "Hoodie 5", "GREY", 42.99, "Winter", 30);
+INSERT INTO fermos VALUES (11, "Tank top 1", "GREY", 22.99, "Summer", 50);
+INSERT INTO fermos VALUES (12, "Tank top 2", "GREY", 22.99, "Summer", 20);
+INSERT INTO fermos VALUES (13, "Tank top 3", "BLACK", 21.99, "Summer", 25);
+INSERT INTO fermos VALUES (14, "Tank top 4", "WHITE", 22.99, "Summer", 28);
+INSERT INTO fermos VALUES (15, "Tank top 5", "RED", 24.99, "Summer", 50);
+
+--display the database ordered by price. 
+SELECT name, price FROM fermos 
+order by price; 
+
+--what is the avg price of items in the Summer Season? 
+SELECT AVG(price) "avg Summer item price"
+FROM fermos
+where season='Summer'; 
+
+--what are the most 5 stocked items? 
+SELECT name, price, inventory
+FROM fermos
+order by inventory desc
+limit 5; 
+
+
