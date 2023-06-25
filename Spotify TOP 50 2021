@@ -45,14 +45,33 @@ LIMIT 10
 
 SELECT track_name
 , artist_name
-, duration_ms/1000 AS Duration_SEC /* The duration was given in MS so I calculate the lenght in seconds by dividing by 1000 */
+, duration_ms/1000 AS Duration_SEC /* The duration was given in MS so I calculated the length in seconds by dividing by 1000 */
 FROM BIT_DB.spotifydata
 ORDER BY duration_ms desc
 LIMIT 10
 
-#Then I determined which artist have more than one song in the TOP 50 and how many songs do they have. 
+#Then I determined which artists have more than one song in the TOP 50 and how many songs they have. 
 
 SELECT DISTINCT artist_name, COUNT(track_name) AS track_count
 FROM BIT_DB.spotifydata
 GROUP BY artist_name
 HAVING COUNT(track_name) > 1
+
+#Use of CTE to Query the DATA 
+
+#I created a CTE table to calculate the average popularity of the artists. 
+#Then, for every artist with an average popularity of 90 or above, I showed their name, 
+#average popularity, and labeled them as a “Top Star”.
+
+WITH top_artist_CTE AS (
+SELECT artist_name,
+AVG(popularity) AS average_popularity
+FROM spotifydata
+GROUP BY artist_name
+HAVING average_popularity>=90
+)
+
+SELECT  artist_name,
+        average_popularity,
+        'Top Star' AS tag
+FROM top_artist_CTE
