@@ -1,0 +1,155 @@
+-- This is a SQL data analysis project using the Chinook database. The project includes queries to explore the data, 
+-- such as finding the average, maximum, and minimum total sales, the number of customers for each country, and the total sales 
+-- amount per year for each country. The project also includes queries related to the employees of the company, such as showing 
+-- the invoices and clients associated with each sales agent and the total sales by year and country. 
+-- If you have any question, please contact me to fmolina.da@gmail.com
+ 
+
+
+-- First I run some queries to make an initial exploration of the data. The data base is 
+
+SELECT * FROM chinook.invoices
+
+SELECT AVG(TOTAL)
+, MAX(TOTAL)
+, MIN (TOTAL)
+FROM chinook.invoices
+
+SELECT DISTINCT * FROM chinook.invoices
+
+SELECT DISTINCT BillingCity FROM chinook.invoices 
+   WHERE BillingCountry = "USA"
+   
+SELECT * FROM chinook.albums
+
+SELECT * FROM chinook.customers
+
+-- Then I ran a query to show the customers (their full names, customer ID, and country) 
+-- who are not in the US. 
+
+SELECT FirstName
+, LastName
+, CustomerId
+, Country 
+FROM chinook.customers
+WHERE Country != "USA"
+
+-- Then I ran a query to show the number of customers for each country. 
+
+SELECT Country 
+,COUNT(CustomerID) 
+FROM chinook.customers
+Group by Country
+Order by COUNT(CustomerID) DESC
+
+-- Then I ran a query to show the number of Sales, Total Sales Amount, and Average Sales for each country. 
+
+SELECT BillingCountry
+, COUNT(InvoiceId) AS No_of_Sales
+, SUM(Total) AS Total_Sales
+, AVG(Total) AS Average_Sale
+FROM chinook.invoices
+Group by BillingCountry
+Order by SUM(Total) desc
+
+
+-- Then I ran a query to show the Total Sales Amount per year for each country. 
+
+SELECT BillingCountry
+, strftime('%Y', InvoiceDate) AS Year
+, SUM(Total) AS Total_Sales
+FROM chinook.invoices
+WHERE strftime('%Y', InvoiceDate) BETWEEN '2009' AND '2013'
+GROUP BY BillingCountry, Year
+ORDER BY BillingCountry, Year
+
+-- Then I ran a query to find the invoices of customers who are from Brazil. 
+-- The resulting table includes the customer`s full name, Invoice ID, Date of the invoice, and billing country.
+
+SELECT cust.FirstName || ' ' || cust.LastName AS Customer_Name, inv.InvoiceId, inv.InvoiceDate, inv.BillingCountry
+FROM chinook.invoices inv
+JOIN chinook.customers cust ON inv.CustomerId = cust.CustomerId
+WHERE cust.Country = 'Brazil'
+ORDER BY (inv.invoicedate)
+
+-- In the next queries I will explore more information related to the employees of the company and their performance.
+
+-- First, I ran a query including all the employees, their title and who they report to, and their country. This provides information of
+-- is in Sales, IT, and who the manager is. Also knowing that all of the staff is located in Canada
+
+SELECT EmployeeID, FirstName || ' ' || LastName AS Employee_Name, Title, ReportsTo, Country
+FROM chinook.employees
+ORDER BY ReportsTo asc
+
+-- Then, I ran a query that shows the invoices and clients associated with each sales agent. 
+
+SELECT e.FirstName || ' ' || e.LastName AS Employee_Name
+, COUNT(DISTINCT c.CustomerId) AS Customer_Count
+, COUNT(DISTINCT i.InvoiceId) AS Invoice_Count
+FROM chinook.employees e
+LEFT JOIN chinook.customers c ON e.EmployeeId = c.SupportRepId
+LEFT JOIN chinook.invoices i ON c.CustomerId = i.CustomerId
+GROUP BY Employee_Name
+HAVING Customer_Count>0
+
+--Then, I wanted to show the total sales by year, creating a query 
+-- that shows the total invoices and total sales. 
+
+SELECT emp.FirstName || ' ' || emp.LastName AS Employee_Name
+, strftime('%Y', inv.InvoiceDate) AS Year
+, COUNT(DISTINCT inv.InvoiceId) AS Total_Invoices
+, SUM(inv.Total) AS Total_Sales
+FROM chinook.employees emp
+LEFT JOIN chinook.customers cust ON emp.EmployeeId = cust.SupportRepId
+LEFT JOIN chinook.invoices inv ON cust.CustomerId = inv.CustomerId
+WHERE emp.Title = 'Sales Support Agent'
+GROUP BY Employee_Name, Year
+ORDER BY Employee_Name, Year
+
+--Then, I wanted to show the total sales by year and country. 
+
+SELECT strftime('%Y', i.InvoiceDate) AS Year
+, i.BillingCountry
+, SUM(i.Total) AS Total_Sales
+FROM chinook.invoices i
+GROUP BY Year, i.BillingCountry
+ORDER BY i.BillingCountry, Year
+
+--In the next queries I rank the Top 20 tracks by Total Sales and the number of times the track was sold
+SELECT trk.name
+, COUNT(inv.InvoiceID) AS No_of_Sales
+, SUM(inv.Total) AS Total_Sales
+FROM chinook.invoices inv
+JOIN chinook.invoice_items ite 
+ON inv.InvoiceId=ite.InvoiceId
+JOIN chinook.tracks trk
+ON trk.TrackId=ite.TrackId
+GROUP BY trk.name
+ORDER BY Total_Sales desc
+Limit 20
+
+----Then, I ran a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+SELECT trk.name AS Track
+, art.name AS Artist
+, alb.title AS Album
+, gnr.name AS Genre
+FROM chinook.tracks trk
+JOIN chinook.albums alb ON trk.AlbumId=alb.AlbumId
+JOIN chinook.artists art ON art.ArtistId=alb.ArtistId
+JOIN chinook.genres gnr ON trk.GenreId=gnr.GenreId
+
+----Then, I ran a query to show the Total Sales just for the "Rock" songs and see those sales for each year. 
+
+SELECT gnr.Name AS Genre
+, strftime('%Y', inv.InvoiceDate) AS Year
+, SUM(inv.Total) AS Total_Sales
+FROM chinook.invoices inv
+JOIN chinook.invoice_items ite ON inv.InvoiceId = ite.InvoiceId
+JOIN chinook.tracks trk ON ite.TrackId = trk.TrackId
+JOIN chinook.genres gnr ON trk.GenreId = gnr.GenreId
+WHERE strftime('%Y', inv.InvoiceDate) BETWEEN '2009' AND '2013'
+      AND gnr.Name="Rock"
+
+AUTHOR: Fernando Molina
+GROUP BY Genre, Year
+ORDER BY Year, Total_Sales desc, Genre
