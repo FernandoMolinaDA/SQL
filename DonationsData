@@ -1,0 +1,138 @@
+--Throughout this data exploration, we have delved into the analysis of donation data and subscriber information 
+--to gain valuable insights and answer key questions. Our investigation involved querying the database to retrieve 
+--relevant information and performing calculations to derive meaningful metrics. 
+
+-- 1. First I run a query for both tables given to do an initial analysis of the data: 
+
+SELECT * FROM donations
+LIMIT 10
+
+SELECT * from subscribers
+LIMIT 10
+
+-- 2. Determine the total number of members in the organization to gain an understanding of the membership size. 
+-- This provides a foundational metric for further analysis and decision-making.
+
+SELECT COUNT(DISTINCT organizationmemberid) AS TOTAL_MEMBERS
+  FROM subscribers 
+-- The total members are 23896
+  
+--3. Visualize the number of members who made donations during the month of August.
+
+SELECT COUNT(DISTINCT organizationmemberid) AS August_Donors
+FROM donations
+WHERE paymentdate like '8%';
+-- The total number of members who made donations during August is 1529
+
+-- 4. Generate a table that presents key metrics including the total number of members in the organization,
+-- the number of members who made donations during the month of August, and the proportion of August donors 
+-- relative to the total number of members. This analysis allows for a comprehensive understanding of member engagement.
+
+    SELECT 
+      COUNT(DISTINCT s.organizationmemberid) AS Total_Members,
+      COUNT(DISTINCT CASE WHEN d.paymentdate LIKE '8%2018' 
+      THEN d.organizationmemberid END) AS August_Givers,
+      ROUND(COUNT(DISTINCT CASE WHEN d.paymentdate LIKE '8%2018' 
+      THEN d.organizationmemberid END) * 100.0 / COUNT(DISTINCT s.organizationmemberid), 2) AS Proportion
+    FROM subscribers s
+    LEFT JOIN donations d ON s.organizationmemberid = d.organizationmemberid;
+
+-- During the month of August, the organization had a total of 1,529 donors, representing approximately 6.4% of 
+-- the total membership base. This indicates a certain level of engagement and support from the members during that period.
+
+
+--4. Also I could analyze the three months of available data and observe the percentage difference from 
+--one month to the previous month: 
+
+SELECT 
+  CASE
+    WHEN paymentdate LIKE '7%' THEN 'July'
+    WHEN paymentdate LIKE '8%' THEN 'August'
+    WHEN paymentdate LIKE '9%' THEN 'September'
+  END AS month,
+  COUNT (DISTINCT organizationmemberid) AS Unique_donors,
+  ROUND(COUNT(organizationmemberid) * 100.0 / (SELECT COUNT(DISTINCT organizationmemberid) FROM subscribers), 2) AS Proportion_of_Total,
+  ROUND((COUNT(organizationmemberid) * 100.0 / LAG(COUNT(organizationmemberid), 2) OVER (ORDER BY paymentdate) - 100), 2) AS Perc_Var_Previous_Month
+FROM donations
+GROUP BY month
+ORDER BY paymentdate;
+
+-- We got the following results: 
+
+--        Unique donors    Proportion of Total     Perc Var Previous Month
+--July	   445	     1.86%	
+--August	  1529	     6.40%	                   243.82%
+--September     638	     2.67%	                  -58.24%
+
+-- How many donors have also taken an advocacy action? 
+-- And we also want to know what is the proportion of donors that took advocacy action over the total. 
+
+SELECT 
+  COUNT(DISTINCT CASE WHEN advocacycount > 0 THEN organizationmemberid END) AS Member_Advocacy_Action,
+  
+    ROUND(COUNT(DISTINCT CASE WHEN advocacycount > 0 THEN organizationmemberid END) * 100.0 
+    / COUNT(DISTINCT organizationmemberid), 2) AS Proportion_of_Total
+FROM subscribers 
+
+--The total members that also took an advocacy action were 11,340. This represents a 47.46%
+
+
+
+--5. Also we visualize the Total amount donated for each month, the everage of the donations, and the proportion of 
+--the total of the 3 months that we are analizing. 
+
+SELECT 
+  CASE
+    WHEN paymentdate LIKE '7%' THEN 1
+    WHEN paymentdate LIKE '8%' THEN 2
+    WHEN paymentdate LIKE '9%' THEN 3
+  END AS '#',
+  CASE
+    WHEN paymentdate LIKE '7%' THEN 'July'
+    WHEN paymentdate LIKE '8%' THEN 'August'
+    WHEN paymentdate LIKE '9%' THEN 'September'
+  END AS month,
+  SUM(paymentamount) AS Total_Amount_Donated,
+  ROUND(AVG(paymentamount),2) AS Average_Amount_Donated,
+  ROUND(SUM(paymentamount) * 100.0 / (SELECT SUM(paymentamount) FROM donations WHERE paymentdate BETWEEN '7/1/2018' AND '9/30/2018'), 2) AS Proportion_of_Total_Amount
+FROM donations
+GROUP BY month
+
+UNION ALL -- To generate the totals in the last row
+SELECT 
+  4 AS '#', 
+ 'Total' AS month,
+  SUM(paymentamount) AS Total_Amount_Donated,
+  ROUND(AVG(paymentamount),2) AS Average_Amount_Donated,
+  100.0 AS Proportion_of_Total_Amount  
+FROM donations
+WHERE paymentdate BETWEEN '7/1/2018' AND '9/30/2018'
+ORDER BY "#";
+
+--The analysis of donation data reveals interesting insights regarding the donation amounts, averages, 
+--and proportions for each month. Here are the findings:
+
+--July: The total donation amount for July was $18,345, with an average donation amount of $41.22. 
+--These donations constituted approximately 17.4% of the total donations.
+
+--August: August recorded the highest donation amount, reaching $56,283, accounting for around 53.39%
+--of the total donations. The average donation amount for this month was $36.79.
+
+--September: Although September had a lower total donation amount of $33,368, the average donation 
+--amount per donation was significantly higher at $52.22. Donations in September represented 
+--approximately 31.65% of the total.
+
+--These insights highlight the varying donation patterns and can provide valuable information 
+--for understanding donor behavior and planning future fundraising efforts.
+
+--The table below summarizes the results:
+
+--Month	Donation Amount    Average Donation    Percentage of Total
+--July            $18,345	        $41.22	    17.4%
+--August          $56,283	        $36.79	    53.39%
+--September       $33,368	        $52.22	    31.65%
+--Total	    $105,414	        $41.90	    100%
+
+--Feel free to reach out if you have any further questions or need additional analysis.
+
+
