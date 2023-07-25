@@ -1,0 +1,73 @@
+--#This GitHub repository showcases a comprehensive data exploration and analysis of Fortune companies using SQL queries. 
+--#The analysis covers various aspects of the Fortune companies' dataset, including revenue, employees, paid time off days, 
+--#maternity leave weeks, and industry-specific insights.
+
+--#Initial Data Exploration
+
+SELECT * FROM fortune_companies
+LIMIT 10;
+
+SELECT company_name,MAX(revenue),employees
+FROM fortune_companies
+END;
+
+SELECT company_name,MIN(revenue),employees
+FROM fortune_companies
+END;
+
+--# SELECT the companies with more than 15 paid_time_off_days
+--# And the maternity leave weeks of at least 12
+
+SELECT company_name, paid_time_off_days, maternity_leave_weeks
+FROM fortune_companies
+WHERE paid_time_off_days >=20 
+     AND maternity_leave_weeks >=12
+GROUP BY company_name;
+
+--# Clasify the companies based on revenue in three categories
+--# taking into consideration the top company revenue as the 100%
+--# The top companies would achieve at least 70% of the max revenue
+--# The Mid Level companies achieve from 50% to 70%
+--# Under 50% of the top revenue would be considered as Low Level
+
+SELECT company_name, revenue,
+  CASE 
+  WHEN revenue >= (SELECT MAX(revenue)*0.70 FROM fortune_companies) 
+                   THEN "Top Companies"
+  WHEN revenue >= (SELECT MAX(revenue)*0.50 FROM fortune_companies) 
+                   THEN "Mid Level Companies"
+                   ELSE "Low Level Companies" 
+           END AS classification
+FROM fortune_companies
+ORDER BY revenue desc;
+
+--#Select the top 10 companies by revenue and calculate the 
+--#participation of percentage of the total revenue
+
+SELECT company_name,revenue,
+       ROUND(revenue / (SELECT SUM(revenue) FROM fortune_companies)*100, 2) AS Participation
+FROM fortune_companies
+GROUP BY company_name
+ORDER BY revenue desc
+LIMIT 10;
+
+--#We want to explore which company is more effective with their Staff
+--#Select the companies that show the best revenue by employee
+--#Note: revenue is multiplied by 1,000,000
+SELECT company_name, employees
+,ROUND((revenue*1000000)/employees) AS Revenue_by_Employee
+FROM fortune_companies
+GROUP BY company_name
+ORDER BY Revenue_by_Employee desc;
+
+--#Evaluate the main industries and how they compare with 
+--#each other. Analyze revenue, number of employees and 
+--#what are the industries with longer employee tenure? 
+
+SELECT industry
+, ROUND(Sum(revenue),2) AS Total_Industry_Revenue
+, sum(employees) AS Total_Employees
+, ROUND(AVG(avg_employee_tenure),2) AS Average_Employee_Tenure_in_Years
+from fortune_companies
+GROUP BY industry
+ORDER BY Total_Industry_Revenue desc;
