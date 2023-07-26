@@ -54,6 +54,7 @@ LIMIT 10;
 --#We want to explore which company is more effective with their Staff
 --#Select the companies that show the best revenue by employee
 --#Note: revenue is multiplied by 1,000,000
+
 SELECT company_name, employees
 ,ROUND((revenue*1000000)/employees) AS Revenue_by_Employee
 FROM fortune_companies
@@ -71,3 +72,24 @@ SELECT industry
 from fortune_companies
 GROUP BY industry
 ORDER BY Total_Industry_Revenue desc;
+
+--#Evaluate name, industry, revenue, and an average industry 
+--#revenue for the top 20 companies.
+--#Then compares each company's revenue with the corresponding 
+--#average industry revenue and Tag it as Above or Below Revenue. 
+
+SELECT
+    company_name,
+    industry,
+    revenue as company_revenue,
+    ROUND((SELECT AVG(revenue) FROM fortune_companies AS fc2 
+           WHERE fc2.industry = fc1.industry), 2) 
+           AS average_industry_revenue,
+    CASE WHEN revenue > (SELECT AVG(revenue) FROM fortune_companies AS fc2 
+                         WHERE fc2.industry = fc1.industry)
+              THEN "Above Average Revenue"
+              ELSE "Below Average Revenue"
+              END AS Tag
+FROM fortune_companies AS fc1
+ORDER BY revenue DESC
+LIMIT 20;
